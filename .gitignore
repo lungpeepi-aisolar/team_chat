@@ -3,3 +3,4 @@ supabase/.temp/
 __pycache__/
 .secrets.tmp.env
 .drive-folder.tmp
+client_secret_*.json

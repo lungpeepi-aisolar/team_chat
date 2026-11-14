@@ -53,6 +53,65 @@ def check_pair(cid, csec):
         return err != "invalid_client"
 
 
+def _read_client(p):
+    """อ่าน client_secret_*.json ที่ดาวน์โหลดจาก Google Cloud (ชนิด Desktop = "installed")"""
+    try:
+        j = json.loads(p.read_text(encoding="utf-8"))
+        c = j.get("installed") or j.get("web") or {}
+        return c.get("client_id", ""), c.get("client_secret", "")
+    except Exception:
+        return "", ""
+
+
+def find_client_json():
+    """หาไฟล์ client_secret_*.json ใน Downloads เอง · ไม่เจอ = เปิดหน้า Google Cloud ให้สร้าง แล้วรอไฟล์ใหม่
+    (Google แสดง secret ครั้งเดียวตอนสร้าง client — ต้องกด Download JSON ตอนนั้น)"""
+    import os
+    import time
+    from pathlib import Path
+    dl = Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Downloads"
+    here = Path(__file__).resolve().parent.parent
+    seen = set()
+
+    def candidates():
+        fs = list(dl.glob("client_secret_*.json")) + list(here.glob("client_secret_*.json"))
+        return sorted(fs, key=lambda f: f.stat().st_mtime, reverse=True)
+
+    for f in candidates():
+        seen.add(f)
+        cid, csec = _read_client(f)
+        if cid and csec and check_pair(cid, csec):
+            print(f"  ✔ ใช้ไฟล์ {f.name} (Client ID กับ secret ถูกต้อง)")
+            return cid, csec
+        print(f"  ✖ ไฟล์ {f.name} ใช้ไม่ได้ (client ถูกลบหรือ secret ไม่ตรง) — ข้าม")
+
+    url = "https://console.cloud.google.com/auth/clients/create"
+    print("\n  ยังไม่มีไฟล์ client — เปิดหน้า Google Cloud ให้แล้ว ทำ 4 คลิก:")
+    print("   1) มุมบนเลือก project ที่สร้างไว้ (Team Chat) และบัญชีที่ถูกต้อง")
+    print("   2) Application type = Desktop app → Name อะไรก็ได้ → กด Create")
+    print("   3) กล่อง 'OAuth client created' → กด  Download JSON  (ไฟล์ลง Downloads)")
+    print("   4) กด OK ปิดกล่อง — หน้าต่างนี้จะเจอไฟล์และไปต่อเอง")
+    print(f"   (ถ้าเบราว์เซอร์ไม่เปิด: {url})\n")
+    try:
+        os.startfile(url)
+    except Exception:
+        webbrowser.open(url)
+    deadline = time.time() + 15 * 60
+    while time.time() < deadline:
+        for f in candidates():
+            if f in seen:
+                continue
+            seen.add(f)
+            time.sleep(1)  # รอเขียนไฟล์เสร็จ
+            cid, csec = _read_client(f)
+            if cid and csec and check_pair(cid, csec):
+                print(f"  ✔ เจอไฟล์ {f.name} — Client ID กับ secret ถูกต้อง")
+                return cid, csec
+            print(f"  ✖ ไฟล์ {f.name} ใช้ไม่ได้ — รอไฟล์ถัดไป")
+        time.sleep(3)
+    sys.exit("รอไฟล์ client_secret_*.json เกิน 15 นาที — รัน setup-all.bat ใหม่")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--env", required=True, help="ไฟล์ที่จะเขียน GOOGLE_* (ค่าลับ)")
@@ -60,19 +119,7 @@ def main():
     a = ap.parse_args()
 
     print("\n── Google Drive ──")
-    for attempt in range(5):
-        cid = input("วาง Client ID แล้วกด Enter: ").strip()
-        csec = getpass.getpass("วาง Client secret แล้วกด Enter (จะไม่แสดงบนจอ): ").strip()
-        # บอกรูปแบบโดยไม่เปิดเผยค่า
-        print(f"  secret ที่วาง: ยาว {len(csec)} ตัว · ขึ้นต้น GOCSPX- : {'ใช่' if csec.startswith('GOCSPX-') else 'ไม่ใช่ ⚠'}"
-              f" · Client ID ลงท้าย .apps.googleusercontent.com : {'ใช่' if cid.endswith('.apps.googleusercontent.com') else 'ไม่ใช่ ⚠'}")
-        if cid and csec and check_pair(cid, csec):
-            print("  ✔ Client ID กับ secret เป็นคู่เดียวกัน")
-            break
-        print("  ✖ Google ไม่รับคู่นี้ (invalid_client) — secret ต้องมาจาก client ตัวเดียวกับ Client ID")
-        print("    (วางครั้งเดียว · ถ้าวางแล้วไม่ขึ้นอะไร ให้กด Enter ทีเดียว) ลองใหม่:\n")
-    else:
-        sys.exit("ลองครบ 5 ครั้งแล้ว — ตรวจที่ Google Cloud → Clients ว่า ID/secret มาจากตัวเดียวกัน")
+    cid, csec = find_client_json()
 
     redirect = f"http://127.0.0.1:{PORT}/"
     state = secrets.token_urlsafe(16)
