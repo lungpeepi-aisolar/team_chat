@@ -14,6 +14,7 @@ import http.server
 import json
 import secrets
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -24,8 +25,32 @@ PORT = 8791
 
 def post(url, data, headers=None):
     req = urllib.request.Request(url, data=data, headers=headers or {}, method="POST")
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        try:
+            j = json.loads(e.read())
+        except Exception:
+            j = {}
+        raise SystemExit(f"Google ตอบ {e.code}: {j.get('error', '')} {j.get('error_description', '')}".strip())
+
+
+def check_pair(cid, csec):
+    """ตรวจว่า Client ID + secret เป็นคู่เดียวกันก่อนเปิดเบราว์เซอร์ (ส่ง code ปลอม:
+    คู่ถูก → invalid_grant · คู่ผิด → invalid_client)"""
+    req = urllib.request.Request("https://oauth2.googleapis.com/token", method="POST", data=urllib.parse.urlencode({
+        "code": "x", "client_id": cid, "client_secret": csec,
+        "redirect_uri": f"http://127.0.0.1:{PORT}/", "grant_type": "authorization_code"}).encode())
+    try:
+        urllib.request.urlopen(req)
+        return True
+    except urllib.error.HTTPError as e:
+        try:
+            err = json.loads(e.read()).get("error", "")
+        except Exception:
+            err = ""
+        return err != "invalid_client"
 
 
 def main():
@@ -35,10 +60,19 @@ def main():
     a = ap.parse_args()
 
     print("\n── Google Drive ──")
-    cid = input("วาง Client ID แล้วกด Enter: ").strip()
-    csec = getpass.getpass("วาง Client secret แล้วกด Enter (จะไม่แสดงบนจอ): ").strip()
-    if not cid or not csec:
-        sys.exit("ไม่ได้ใส่ Client ID / secret")
+    for attempt in range(5):
+        cid = input("วาง Client ID แล้วกด Enter: ").strip()
+        csec = getpass.getpass("วาง Client secret แล้วกด Enter (จะไม่แสดงบนจอ): ").strip()
+        # บอกรูปแบบโดยไม่เปิดเผยค่า
+        print(f"  secret ที่วาง: ยาว {len(csec)} ตัว · ขึ้นต้น GOCSPX- : {'ใช่' if csec.startswith('GOCSPX-') else 'ไม่ใช่ ⚠'}"
+              f" · Client ID ลงท้าย .apps.googleusercontent.com : {'ใช่' if cid.endswith('.apps.googleusercontent.com') else 'ไม่ใช่ ⚠'}")
+        if cid and csec and check_pair(cid, csec):
+            print("  ✔ Client ID กับ secret เป็นคู่เดียวกัน")
+            break
+        print("  ✖ Google ไม่รับคู่นี้ (invalid_client) — secret ต้องมาจาก client ตัวเดียวกับ Client ID")
+        print("    (วางครั้งเดียว · ถ้าวางแล้วไม่ขึ้นอะไร ให้กด Enter ทีเดียว) ลองใหม่:\n")
+    else:
+        sys.exit("ลองครบ 5 ครั้งแล้ว — ตรวจที่ Google Cloud → Clients ว่า ID/secret มาจากตัวเดียวกัน")
 
     redirect = f"http://127.0.0.1:{PORT}/"
     state = secrets.token_urlsafe(16)
