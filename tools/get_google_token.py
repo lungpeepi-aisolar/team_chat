@@ -169,9 +169,19 @@ def main():
     if not refresh:
         sys.exit("ไม่ได้ refresh_token — ถอนสิทธิ์แอปที่ myaccount.google.com/permissions แล้วรันใหม่")
 
-    folder = post("https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
-                  json.dumps({"name": "Team Chat", "mimeType": "application/vnd.google-apps.folder"}).encode(),
-                  {"authorization": "Bearer " + tok["access_token"], "content-type": "application/json"})
+    auth = {"authorization": "Bearer " + tok["access_token"]}
+    # มีโฟลเดอร์ "Team Chat" ที่แอปสร้างไว้แล้ว (รันซ้ำ) → ใช้ตัวเดิม ไม่สร้างซ้ำ
+    q = urllib.parse.urlencode({"q": "name='Team Chat' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+                                "fields": "files(id,webViewLink)", "orderBy": "createdTime"})
+    with urllib.request.urlopen(urllib.request.Request(f"https://www.googleapis.com/drive/v3/files?{q}", headers=auth)) as r:
+        found = json.loads(r.read()).get("files", [])
+    if found:
+        folder = found[0]
+        print("  ✔ ใช้โฟลเดอร์ Team Chat เดิม")
+    else:
+        folder = post("https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
+                      json.dumps({"name": "Team Chat", "mimeType": "application/vnd.google-apps.folder"}).encode(),
+                      {**auth, "content-type": "application/json"})
 
     with open(a.env, "a", encoding="utf-8") as f:
         f.write(f"GOOGLE_CLIENT_ID={cid}\nGOOGLE_CLIENT_SECRET={csec}\n"

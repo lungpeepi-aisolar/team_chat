@@ -12,7 +12,10 @@ $envFile = Join-Path $root '.secrets.tmp.env'
 $urlFile = Join-Path $root '.drive-folder.tmp'
 
 function Say($t, $c = 'Cyan') { Write-Host $t -ForegroundColor $c }
-function Invoke-Supa { & npx -y supabase@3.1.0 @args; if ($LASTEXITCODE) { throw "คำสั่ง supabase $($args[0]) ไม่สำเร็จ" } }
+function Invoke-Supa {  # ต้องคัดลอก $args ก่อน splat: npx เป็น .ps1 แล้ว @args ตรงๆ ทำอาร์กิวเมนต์หาย
+  $a = @($args); & npx -y supabase@3.1.0 @a
+  if ($LASTEXITCODE) { throw "คำสั่ง supabase $($a[0]) ไม่สำเร็จ" }
+}
 function ReadSecret($prompt) {
   $s = Read-Host $prompt -AsSecureString
   [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)).Trim()
