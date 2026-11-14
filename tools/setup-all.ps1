@@ -11,7 +11,7 @@ $envFile = Join-Path $root '.secrets.tmp.env'
 $urlFile = Join-Path $root '.drive-folder.tmp'
 
 function Say($t, $c = 'Cyan') { Write-Host $t -ForegroundColor $c }
-function Cli { & npx -y supabase@3.1.0 @args; if ($LASTEXITCODE) { throw "คำสั่ง supabase $($args[0]) ไม่สำเร็จ" } }
+function Invoke-Supa { & npx -y supabase@3.1.0 @args; if ($LASTEXITCODE) { throw "คำสั่ง supabase $($args[0]) ไม่สำเร็จ" } }
 function ReadSecret($prompt) {
   $s = Read-Host $prompt -AsSecureString
   [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)).Trim()
@@ -27,7 +27,7 @@ try {
   Say "`n[1/6] ล็อกอิน Supabase (ครั้งแรกเบราว์เซอร์จะเปิดให้กดยืนยัน)"
   # ตรวจว่าล็อกอินแล้วหรือยัง ผ่าน cmd (PowerShell 5.1 จะโยน error ถ้าดัก stderr ของ npx เอง)
   & cmd /c "npx -y supabase@3.1.0 projects list >nul 2>&1"
-  if ($LASTEXITCODE) { Cli login }
+  if ($LASTEXITCODE) { Invoke-Supa login }
   Say "  ✔ Supabase พร้อม" Green
 
   # ── 2. Telegram ──
@@ -73,13 +73,13 @@ try {
 
   # ── 4. Secrets ──
   Say "`n[4/6] ส่งค่าลับเข้า Supabase Secrets"
-  Cli secrets set --env-file $envFile "--remote=$P" --yes
+  Invoke-Supa secrets set --env-file $envFile "--remote=$P" --yes
   Remove-Item $envFile -ErrorAction SilentlyContinue
   Say "  ✔ ใส่ค่าลับแล้ว (ไฟล์ชั่วคราวลบแล้ว)" Green
 
   # ── 5. Edge Function ──
   Say "`n[5/6] อัป Edge Function teamchat"
-  Cli functions deploy teamchat --no-verify-jwt --use-api "--remote=$P" --yes
+  Invoke-Supa functions deploy teamchat --no-verify-jwt --use-api "--remote=$P" --yes
   Say "  ✔ อัปแล้ว" Green
 
   # ── 6. Webhook + ทดสอบ ──
