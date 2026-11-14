@@ -65,8 +65,15 @@ def main():
         def log_message(self, *x):
             pass
 
-    print("กำลังเปิดเบราว์เซอร์ → ล็อกอิน peerapong@proinventive.co.th → กด Allow/อนุญาต")
-    webbrowser.open(url)
+    print("กำลังเปิดเบราว์เซอร์ → เลือกบัญชีที่สร้าง client → กด Continue/Allow")
+    print("\nถ้าเบราว์เซอร์ไม่เปิดเอง: คัดลอกลิงก์ทั้งบรรทัดด้านล่าง ไปวางในช่องที่อยู่ของ Chrome แล้วกด Enter\n")
+    print(url + "\n")
+    try:
+        import os
+        os.startfile(url)  # Windows: เปิดด้วยเบราว์เซอร์หลัก
+    except Exception:
+        webbrowser.open(url)
+    print("…รอการกดอนุญาตในเบราว์เซอร์ (หน้าต่างนี้จะไปต่อเอง)")
     srv = http.server.HTTPServer(("127.0.0.1", PORT), H)
     while "code" not in got and "error" not in got:
         srv.handle_request()
