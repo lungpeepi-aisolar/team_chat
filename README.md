@@ -38,7 +38,7 @@
 
 ### 2.2 Telegram Bot
 1. คุยกับ @BotFather → `/newbot` → ได้ **bot token**
-2. `/newapp` (ผูก Mini App กับบอท) → ใส่ URL หน้าเว็บ (https://team-chat.pages.dev) → ได้ลิงก์ `t.me/<bot>/<app>`
+2. `/newapp` (ผูก Mini App กับบอท) → ใส่ URL หน้าเว็บ (https://teamchat-eih.pages.dev) → ได้ลิงก์ `t.me/<bot>/<app>`
 3. เพิ่มบอทเข้ากลุ่มทีม · ปิด privacy (`/setprivacy` → Disable) เพื่อให้บอทเห็นข้อความในกลุ่ม
 4. หา chat id ของกลุ่ม (ส่งข้อความในกลุ่ม แล้วเปิด `https://api.telegram.org/bot<token>/getUpdates` ดู `chat.id` ค่าติดลบ)
 

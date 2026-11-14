@@ -4,7 +4,7 @@
 | ส่วน | ที่อยู่ |
 |---|---|
 | โค้ด | https://github.com/lungpeepi-aisolar/team_chat |
-| หน้าเว็บ (Mini App) | https://team-chat.pages.dev (Cloudflare Pages · ดึงจาก GitHub อัตโนมัติทุกครั้งที่ push) |
+| หน้าเว็บ (Mini App) | https://teamchat-eih.pages.dev (Cloudflare Pages · ดึงจาก GitHub อัตโนมัติทุกครั้งที่ push) |
 | Supabase | project `emlwnczeckucjycwjzmd` · https://supabase.com/dashboard/project/emlwnczeckucjycwjzmd |
 | Google Drive | บัญชีบริษัท peerapong@proinventive.co.th (สำรอง: lungpee.pi@gmail.com) |
 
@@ -20,7 +20,7 @@
 4. Cloudflare (บัญชีของ lungpeepi): https://dash.cloudflare.com/1b74ba852ae56d2124e0680aba65944d/workers-and-pages/create/pages
    → **Import an existing Git repository** (Connect to Git) → อนุญาต GitHub `lungpeepi-aisolar` → เลือก `team_chat`
    → Project name `team-chat` · Production branch `main` · Framework preset **None** · Build command **เว้นว่าง** · Build output directory **`web`** → Save and Deploy
-5. ได้ที่อยู่ `https://team-chat.pages.dev` (ถ้าชื่อซ้ำ Cloudflare จะเติมท้าย — ส่งที่อยู่จริงให้ Claude) · ต่อจากนี้ push เมื่อไรหน้าเว็บอัปเดตเอง
+5. ได้ที่อยู่ `https://teamchat-eih.pages.dev` (ถ้าชื่อซ้ำ Cloudflare จะเติมท้าย — ส่งที่อยู่จริงให้ Claude) · ต่อจากนี้ push เมื่อไรหน้าเว็บอัปเดตเอง
 
 ## ขั้นที่ 2 · Supabase ✅ เสร็จแล้ว (14 พ.ย. 2569 — ตารางครบ · anon key ใส่ใน config.js แล้ว)
 1. เปิด SQL Editor: https://supabase.com/dashboard/project/emlwnczeckucjycwjzmd/sql/new
@@ -34,7 +34,7 @@
 ## ขั้นที่ 3 · Telegram ✋ (5 นาที)
 1. ในแอป Telegram คุยกับ **@BotFather** → `/newbot` → ตั้งชื่อ เช่น `ProInventive Team Chat` และ username ลงท้าย `bot` → ได้ **token** (เก็บไว้ ใช้ขั้นที่ 5)
 2. `/setprivacy` → เลือกบอท → **Disable** (ให้บอทเห็นข้อความในกลุ่ม)
-3. `/newapp` → เลือกบอท → ชื่อ `Team Chat` → URL = `https://team-chat.pages.dev` (ที่อยู่จริงจากขั้นที่ 1) → short name `chat` → ได้ลิงก์ `https://t.me/<ชื่อบอท>/chat`
+3. `/newapp` → เลือกบอท → ชื่อ `Team Chat` → URL = `https://teamchat-eih.pages.dev` (ที่อยู่จริงจากขั้นที่ 1) → short name `chat` → ได้ลิงก์ `https://t.me/<ชื่อบอท>/chat`
 4. สร้างกลุ่มทีม (หรือใช้กลุ่มเดิม) → เพิ่มบอทเข้ากลุ่ม → พิมพ์อะไรก็ได้ 1 ข้อความ
 5. หาไอดีกลุ่ม: เปิดในเบราว์เซอร์ `https://api.telegram.org/bot<token>/getUpdates` → ดู `"chat":{"id":-100…}` (ค่าติดลบ)
 6. หาไอดีตัวเอง: คุยกับ **@userinfobot** → ได้ตัวเลข `Id` (ใช้เป็นผู้ดูแลคนแรก)
