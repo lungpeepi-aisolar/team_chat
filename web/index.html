@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Team Chat</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css?v=0.1.0b">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="config.js?v=0.1.0b"></script>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <img src="icon.png" alt="" width="28" height="28">
+      <div><b>Team Chat</b> <small style="display:inline">v<span id="ver"></span></small><small id="modeBadge">…</small></div>
+    </div>
+    <div class="side-head"><span>ห้องแชท</span><button class="mini" id="btnNewRoom" title="สร้างห้องใหม่">＋ ห้องใหม่</button></div>
+    <nav id="channels" class="channels"></nav>
+    <nav class="channels fixed">
+      <button class="ch" data-view="folders"><span>📁</span><span>โฟลเดอร์เอกสาร</span></button>
+      <button class="ch" data-view="settings"><span>⚙️</span><span>สิทธิ์และการตั้งค่า</span></button>
+    </nav>
+    <div class="me" id="meBox"></div>
+  </aside>
+
+  <main class="chat">
+    <header class="top">
+      <button class="icon-btn only-mobile" id="btnMenu" aria-label="ห้องแชท">☰</button>
+      <div class="top-title"><span id="chIcon">💬</span> <b id="chName">ทั่วไป</b><small id="chSub"></small></div>
+      <div class="top-actions" id="roomActions">
+        <button class="icon-btn" id="btnSearch" title="ค้นหา">🔍</button>
+        <button class="icon-btn" id="btnPins" title="ข้อความที่ปักหมุด">📌<sup id="pinCount"></sup></button>
+        <button class="icon-btn" id="btnBell" title="แจ้งเตือนห้องนี้">🔔</button>
+        <button class="icon-btn" id="btnFolder" title="โฟลเดอร์ Google Drive ของห้อง">📁</button>
+        <button class="icon-btn" id="btnRoomMenu" title="ตั้งค่าห้อง">⋯</button>
+      </div>
+    </header>
+    <div class="searchbar" id="searchBar" hidden>
+      <input id="q" type="search" placeholder="ค้นหาข้อความ ไฟล์ การ์ด…">
+      <label class="chk"><input type="checkbox" id="qAll"> ทุกห้อง</label>
+      <button class="mini" id="btnSearchClose">ปิด</button>
+    </div>
+
+    <section class="msgs" id="msgs" aria-live="polite"></section>
+    <section class="panel" id="panel" hidden></section>
+
+    <div class="upload-bar" id="uploadBar" hidden><span id="uploadText">กำลังอัปโหลด…</span><div class="bar"><i id="uploadPct"></i></div></div>
+    <div class="ctx-bar" id="ctxBar" hidden><span id="ctxText"></span><button class="mini" id="ctxCancel">✕</button></div>
+
+    <footer class="composer" id="composer">
+      <button class="icon-btn" id="btnAttach" title="แนบไฟล์/รูป → Google Drive">📎</button>
+      <button class="icon-btn" id="btnCards" title="การ์ด (UI ที่ออกแบบเอง)">➕</button>
+      <textarea id="txt" rows="1" placeholder="พิมพ์ข้อความ…"></textarea>
+      <button class="send" id="btnSend" title="ส่ง">➤</button>
+      <input type="file" id="file" hidden multiple>
+    </footer>
+  </main>
+</div>
+
+<!-- เมนูการ์ด -->
+<div class="sheet" id="cardMenu" hidden>
+  <div class="sheet-body">
+    <h3>เลือกการ์ด</h3>
+    <button class="menu-item" data-card="report">🏗️ <div><b>รายงานหน้างาน</b><small>วันที่ · ช่าง · ความคืบหน้า % · หลายรูป</small></div></button>
+    <button class="menu-item" data-card="approval">✅ <div><b>ขออนุมัติ</b><small>ผู้มีสิทธิ์กดอนุมัติ/ไม่อนุมัติในแชท</small></div></button>
+    <button class="menu-item" data-card="checklist">☑️ <div><b>เช็กลิสต์</b><small>ติ๊กทีละข้อ เห็นว่าใครติ๊ก</small></div></button>
+    <button class="menu-item" data-card="workorder">🛠️ <div><b>ใบงาน</b><small>มอบหมายช่าง · สถานที่ · กำหนดเสร็จ · สถานะ</small></div></button>
+    <button class="menu-item" data-card="appointment">📅 <div><b>นัดหมาย</b><small>วัน-เวลา · สถานที่ · ตอบรับ · เพิ่มลงปฏิทิน</small></div></button>
+    <button class="ghost" data-close>ปิด</button>
+  </div>
+</div>
+
+<!-- ฟอร์มการ์ด (สร้างเนื้อหาจาก app.js) -->
+<div class="sheet" id="cardForm" hidden><form class="sheet-body" id="fCard"></form></div>
+
+<!-- ห้องแชท: สร้าง/แก้ -->
+<div class="sheet" id="roomForm" hidden>
+  <form class="sheet-body" id="fRoom">
+    <h3 id="roomFormTitle">ห้องใหม่</h3>
+    <label>ชื่อห้อง (เช่น ชื่อโปรเจกต์/ไซต์)<input name="name" required maxlength="60" placeholder="เช่น ไซต์ C โรงงานลำพูน"></label>
+    <label>ไอคอน<div class="emoji-pick" id="emojiPick"></div></label>
+    <label class="chk"><input type="checkbox" name="notify" checked> แจ้งข้อความใหม่ของห้องนี้เข้ากลุ่ม Telegram</label>
+    <label class="chk" id="roomFolderRow"><input type="checkbox" name="folder"> สร้างโฟลเดอร์เก็บไฟล์ใน Google Drive บริษัทเลย</label>
+    <div class="row">
+      <button type="button" class="danger" id="btnRoomDelete" hidden>ลบห้อง</button>
+      <span style="flex:1"></span>
+      <button type="button" class="ghost" data-close>ยกเลิก</button><button class="primary">บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<!-- โฟลเดอร์ของห้อง -->
+<div class="sheet" id="folderSheet" hidden>
+  <form class="sheet-body" id="fFolder">
+    <h3>📁 โฟลเดอร์ Google Drive ของห้อง</h3>
+    <div id="folderList"></div>
+    <label>สร้างโฟลเดอร์ใหม่ — ชื่องาน<input name="job" maxlength="80" placeholder="เช่น ติดตั้งโซลาร์ 50 kW"></label>
+    <p class="hint">ชื่อในไดรฟ์จะเป็น <b id="folderPreview">[ชื่องาน] - [ผู้สร้าง]</b> · ไฟล์ที่แนบในห้องนี้จะเข้าโฟลเดอร์ที่เลือก ●</p>
+    <div class="row"><button type="button" class="ghost" data-close>ปิด</button><button class="primary">สร้างโฟลเดอร์</button></div>
+  </form>
+</div>
+
+<!-- เข้าใช้ (เปิดนอก Telegram) -->
+<div class="sheet" id="loginForm" hidden>
+  <form class="sheet-body" id="fLogin">
+    <h3>เข้าใช้ Team Chat</h3>
+    <p class="hint" id="loginHint">เปิดจากเบราว์เซอร์ทั่วไป — ใส่ชื่อที่จะแสดงในแชท</p>
+    <label>ชื่อของคุณ<input name="name" required maxlength="40"></label>
+    <label id="pinRow">รหัสทีม<input name="pin" type="password" autocomplete="off"></label>
+    <label id="roleRow">บทบาท (เฉพาะโหมดตัวอย่าง)<select name="role"><option value="admin">ผู้ดูแล (admin)</option><option value="member">สมาชิก</option></select></label>
+    <div class="row"><button class="primary">เข้าใช้</button></div>
+  </form>
+</div>
+
+<div class="viewer" id="viewer" hidden><img id="viewerImg" alt=""></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js?v=0.1.0b"></script>
+</body>
+</html>
