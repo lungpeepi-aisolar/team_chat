@@ -287,6 +287,22 @@ const OPS: Record<string, (u: User, b: any) => Promise<unknown>> = {
     need(key === 'approve_policy' && ['admin', 'approvers', 'all'].includes(value), 'ค่าตั้งไม่ถูกต้อง');
     return q(db.from('tc_settings').upsert({ key, value }).select().single());
   },
+  // แชร์โฟลเดอร์หลัก Team Chat ให้ทีม (โฟลเดอร์ย่อย/ไฟล์ข้างในได้สิทธิ์ตามโดยอัตโนมัติ)
+  // DRIVE_SHARE = "proinventive.co.th,someone@gmail.com" (ไม่มี @ = ทั้งโดเมน) · ค่าเริ่ม proinventive.co.th
+  async drive_share(u) {
+    const R = await rulesFor(u); need(R.isAdmin, 'เฉพาะผู้ดูแลเท่านั้น', 403);
+    const id = env('DRIVE_FOLDER_ID'); need(id, 'ยังไม่ได้ตั้ง DRIVE_FOLDER_ID');
+    const H = { authorization: 'Bearer ' + (await googleToken()), 'content-type': 'application/json' };
+    const info = await (await fetch(`https://www.googleapis.com/drive/v3/files/${id}?supportsAllDrives=true&fields=name,webViewLink,owners(emailAddress)`, { headers: H })).json();
+    const results: { target: string; ok: boolean; error?: string }[] = [];
+    for (const t of env('DRIVE_SHARE', 'proinventive.co.th').split(',').map((s) => s.trim()).filter(Boolean)) {
+      const body = t.includes('@') ? { type: 'user', role: 'writer', emailAddress: t } : { type: 'domain', role: 'writer', domain: t };
+      const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions?supportsAllDrives=true&sendNotificationEmail=false`, { method: 'POST', headers: H, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      results.push({ target: t, ok: r.ok, error: r.ok ? undefined : j.error?.message });
+    }
+    return { owner: info.owners?.[0]?.emailAddress || '(ไม่ทราบ)', link: info.webViewLink, results };
+  },
 };
 
 // ───────── router ─────────

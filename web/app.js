@@ -197,6 +197,10 @@
         if (approver !== undefined) m.approver = !!approver;
         return put('tc_members', m);
       },
+      drive_share(u) {
+        need(rules.isAdmin(u), 'เฉพาะผู้ดูแลเท่านั้น');
+        return { owner: 'peerapong@proinventive.co.th (ตัวอย่าง)', link: null, results: [{ target: 'proinventive.co.th', ok: true }] };
+      },
       setting(u, { key, value }) {
         need(rules.isAdmin(u), 'เฉพาะผู้ดูแลเท่านั้น');
         need(key === 'approve_policy' && ['admin', 'approvers', 'all'].includes(value), 'ค่าตั้งไม่ถูกต้อง');
@@ -450,6 +454,8 @@
           <select data-role="${esc(m.user_id)}" style="width:auto" ${dis}><option value="member" ${m.role !== 'admin' ? 'selected' : ''}>สมาชิก</option><option value="admin" ${m.role === 'admin' ? 'selected' : ''}>ผู้ดูแล</option></select></div>`).join('')}</div>
       <div class="box"><h3>การแจ้งเตือน</h3><p class="hint">🔔 ที่หัวห้อง = เปิด/ปิดแจ้งเตือนบนเครื่องนี้ทีละห้อง · ⋯ ตั้งค่าห้อง = แจ้งเข้ากลุ่ม Telegram หรือไม่</p>
         <button class="mini" id="btnNotifPerm">อนุญาตแจ้งเตือนเบราว์เซอร์ (${typeof Notification === 'undefined' ? 'ไม่รองรับ' : { granted: 'อนุญาตแล้ว', denied: 'ถูกปิด', default: 'ยังไม่ตั้ง' }[Notification.permission]})</button></div>
+      ${admin ? `<div class="box"><h3>Google Drive</h3><p class="hint">แชร์โฟลเดอร์ Team Chat ให้ทุกคนในบริษัทเปิดไฟล์จากแชทได้ (โฟลเดอร์ย่อยของทุกห้องได้สิทธิ์ตามเอง)</p>
+        <button class="mini" id="btnDriveShare">แชร์โฟลเดอร์ให้ทีม + ดูเจ้าของ</button><div id="driveShareOut" class="hint" style="margin-top:6px"></div></div>` : ''}
       ${api.mode === 'demo' ? '<div class="box"><h3>โหมดตัวอย่าง</h3><button class="danger" id="btnReset">ล้างข้อมูลตัวอย่าง</button></div>' : ''}`);
   }
 
@@ -716,6 +722,14 @@
       else if (t.id === 'btnLogout') { saveMe(null); location.reload(); }
       else if (t.id === 'btnReset' && confirm('ล้างข้อมูลตัวอย่างทั้งหมดในเครื่องนี้?')) api.reset();
       else if (t.id === 'btnNotifPerm' && typeof Notification !== 'undefined') { await Notification.requestPermission(); renderSettings(); }
+      else if (t.id === 'btnDriveShare') {
+        const out = $('driveShareOut'); out.textContent = 'กำลังแชร์…'; t.disabled = true;
+        try {
+          const r = await run('drive_share', {});
+          out.innerHTML = `เจ้าของโฟลเดอร์: <b>${esc(r.owner)}</b><br>` + r.results.map((x) => `${x.ok ? '✔' : '✖'} ${esc(x.target)}${x.error ? ' — ' + esc(x.error) : ''}`).join('<br>')
+            + (r.link ? `<br><a href="${esc(r.link)}" target="_blank" rel="noopener">เปิดโฟลเดอร์ ↗</a>` : '');
+        } catch (err) { out.textContent = '✖ ' + err.message; } finally { t.disabled = false; }
+      }
     });
     document.addEventListener('change', (e) => {
       const t = e.target;
