@@ -25,7 +25,8 @@ try {
 
   # ── 1. Supabase ──
   Say "`n[1/6] ล็อกอิน Supabase (ครั้งแรกเบราว์เซอร์จะเปิดให้กดยืนยัน)"
-  & npx -y supabase@3.1.0 projects list *> $null
+  # ตรวจว่าล็อกอินแล้วหรือยัง ผ่าน cmd (PowerShell 5.1 จะโยน error ถ้าดัก stderr ของ npx เอง)
+  & cmd /c "npx -y supabase@3.1.0 projects list >nul 2>&1"
   if ($LASTEXITCODE) { Cli login }
   Say "  ✔ Supabase พร้อม" Green
 
