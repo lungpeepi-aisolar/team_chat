@@ -6,12 +6,10 @@ set npm_config_cache=%~dp0..\.npm-cache
 set PROJECT=emlwnczeckucjycwjzmd
 set CLI=npx -y supabase@3.1.0
 echo.
-echo [1/3] ล็อกอิน Supabase (ครั้งแรกจะเปิดเบราว์เซอร์ให้กดยืนยัน · ครั้งต่อไปข้ามเอง)
+echo [1/2] ล็อกอิน Supabase (ครั้งแรกจะเปิดเบราว์เซอร์ให้กดยืนยัน · ครั้งต่อไปข้ามเอง)
 call %CLI% projects list >nul 2>&1 || call %CLI% login || goto :err
-echo [2/3] ผูกกับ project %PROJECT%
-call %CLI% link --project-ref %PROJECT% || goto :err
-echo [3/3] อัป Edge Function teamchat
-call %CLI% functions deploy teamchat --no-verify-jwt --project-ref %PROJECT% || goto :err
+echo [2/2] อัป Edge Function teamchat ไป project %PROJECT%
+call %CLI% functions deploy teamchat --no-verify-jwt --use-api --remote=%PROJECT% --yes || goto :err
 echo.
 echo เสร็จแล้ว: https://%PROJECT%.supabase.co/functions/v1/teamchat
 echo ค่าลับ (Secrets) ใส่ที่ https://supabase.com/dashboard/project/%PROJECT%/functions/secrets

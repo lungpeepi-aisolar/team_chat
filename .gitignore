@@ -1,3 +1,5 @@
 supabase/.temp/
 .env
 __pycache__/
+.secrets.tmp.env
+.drive-folder.tmp
