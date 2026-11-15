@@ -4,3 +4,4 @@ __pycache__/
 .secrets.tmp.env
 .drive-folder.tmp
 client_secret_*.json
+tools/_vendor/

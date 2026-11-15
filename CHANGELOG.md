@@ -1,6 +1,6 @@
 # Team Chat — บันทึกการเปลี่ยนแปลง
 
-## 0.1.0 · 14 พ.ย. 2569 · โดย ลุงพี
+## 0.1.0 · 14–15 พ.ย. 2569 · โดย ลุงพี
 - ต้นแบบแรก: Telegram Mini App + Supabase (ข้อความ realtime) + Google Drive (ไฟล์/รูป)
 - โหมดตัวอย่าง (config.js ว่าง) เก็บในเบราว์เซอร์ · เปิด 2 แท็บคุยกันได้
 - แนบไฟล์/รูป · การ์ด "รายงานหน้างาน" และ "ขออนุมัติ" (กดอนุมัติในแชท)
@@ -12,3 +12,5 @@
 - Edge Function `teamchat`: ตรวจ Telegram initData / รหัสทีม · อัปขึ้น Drive · แจ้งเข้ากลุ่ม Telegram · รับข้อความจากกลุ่มกลับเข้าแอป
 - ต่อระบบจริง: Supabase project `emlwnczeckucjycwjzmd` · หน้าเว็บขึ้น Cloudflare Pages (ดึงจาก GitHub `lungpeepi-aisolar/team_chat`) · ขั้นตอนใน SETUP.md
 - เพิ่ม `deploy-function.bat` (อัป Edge Function) · `google-token.bat` (ขอสิทธิ์ Drive + สร้างโฟลเดอร์ Team Chat)
+- รหัสทีม (`team-pin.bat`) · ใน Telegram ใช้ได้เฉพาะสมาชิกกลุ่มทีม · ปุ่มแชร์โฟลเดอร์ Drive ให้โดเมนบริษัท
+- ไอคอน Desktop เปิดเว็บจริง · การ์ด QR ส่งทีม (`assets/teamchat-qr-card.png`)

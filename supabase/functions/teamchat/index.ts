@@ -44,6 +44,19 @@ async function hmac(key: Uint8Array, msg: string) {
 const hex = (b: Uint8Array) => [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 
 type User = { id: string; name: string };
+
+// สมาชิกกลุ่ม TELEGRAM_CHAT_ID เท่านั้นที่ใช้แอปได้ (จำผล 10 นาที) · ไม่ได้ตั้งกลุ่ม = ไม่ตรวจ
+const memberCache = new Map<number, { ok: boolean; exp: number }>();
+async function isGroupMember(uid: number) {
+  const chat = env('TELEGRAM_CHAT_ID');
+  if (!chat || !BOT) return true;
+  const c = memberCache.get(uid);
+  if (c && c.exp > Date.now()) return c.ok;
+  const r = await fetch(`https://api.telegram.org/bot${BOT}/getChatMember?chat_id=${chat}&user_id=${uid}`).then((x) => x.json()).catch(() => null);
+  const ok = !!r?.ok && ['creator', 'administrator', 'member', 'restricted'].includes(r.result?.status);
+  memberCache.set(uid, { ok, exp: Date.now() + 10 * 60e3 });
+  return ok;
+}
 async function whoAmI(req: Request): Promise<User | null> {
   const init = req.headers.get('x-tg-init-data');
   if (init && BOT) {
@@ -57,6 +70,7 @@ async function whoAmI(req: Request): Promise<User | null> {
     const u = JSON.parse(p.get('user') || '{}');
     const allow = env('ALLOWED_TG_IDS').split(',').map((s) => s.trim()).filter(Boolean);
     if (allow.length && !allow.includes(String(u.id))) return null;
+    if (!allow.length && !(await isGroupMember(u.id))) return null; // เฉพาะสมาชิกกลุ่มทีมใน Telegram
     return { id: 'tg:' + u.id, name: [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || 'Telegram' };
   }
   const pin = env('TEAM_PIN');
@@ -328,7 +342,7 @@ Deno.serve(async (req) => {
     }
 
     const me = await whoAmI(req);
-    need(me, 'ไม่มีสิทธิ์ — เปิดจาก Telegram หรือใส่รหัสทีมให้ถูก', 401);
+    need(me, 'ไม่มีสิทธิ์ — ต้องเป็นสมาชิกกลุ่มทีมใน Telegram หรือใส่รหัสทีมให้ถูก', 401);
 
     if (path === '/upload' && req.method === 'POST') {
       const fd = await req.formData();

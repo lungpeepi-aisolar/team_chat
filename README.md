@@ -88,3 +88,16 @@ Cloudflare Pages ดึงโฟลเดอร์ `web` จาก GitHub `lungp
 | `supabase/functions/teamchat/index.ts` | Edge Function (Drive · Telegram · ตรวจสิทธิ์) |
 | `tools/get_google_token.py` | ขอ refresh token + สร้างโฟลเดอร์ Drive |
 | `TeamChat.bat` · `make-shortcut.ps1` · `teamchat.ico` | เปิดโปรแกรม · ไอคอน Desktop |
+
+## 5. ใช้งานประจำ (ระบบจริง)
+| ทำอะไร | วิธี |
+|---|---|
+| เปิดแอปบนคอม | ไอคอน **Team Chat** บน Desktop → https://teamchat-eih.pages.dev (ใส่ชื่อ + รหัสทีม) |
+| เปิดในมือถือ | https://t.me/ProInventive_Chat_bot/chat (ไม่ต้องใช้รหัส · ต้องเป็นสมาชิกกลุ่ม Pro inventive) |
+| ส่งทีมงาน | การ์ด QR `assets\teamchat-qr-card.png` (สร้างใหม่: `py -I tools\make_qr.py`) |
+| ตั้ง/เปลี่ยนรหัสทีม | ดับเบิลคลิก `team-pin.bat` (อัป Edge Function ล่าสุดให้ด้วย) |
+| อัป Edge Function หลังแก้โค้ด | `deploy-function.bat` |
+| ติดตั้งใหม่/ซ่อม (Telegram · Drive) | `setup-all.bat` (ขั้นที่เสร็จแล้วข้ามเอง) |
+
+- ใน Telegram: ใช้ได้เฉพาะ **สมาชิกกลุ่ม Pro inventive** (ออกจากกลุ่ม = เข้าแอปไม่ได้ภายใน 10 นาที)
+- ⚠ ข้อจำกัดต้นแบบที่ยังอยู่: คนที่มีลิงก์เว็บ **อ่าน** แชทได้ (เขียนไม่ได้) — ใช้งานจริงจังควรเพิ่มล็อกอิน Supabase Auth
